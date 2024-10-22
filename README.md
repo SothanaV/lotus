@@ -1,4 +1,5 @@
 # LOTUS:  A Query Engine For Processing Data with LLMs
+- fork from https://github.com/TAG-Research/lotus and integrate with https://github.com/storemesh/dsm-services for use ollama llm with authen
 <!--- BADGES: START --->
 [![Colab Demo](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1OzoJXH13aOwNOIEemClxzNCNYnqSGxVl?usp=sharing)
 [![Arxiv](https://img.shields.io/badge/arXiv-2407.11418-B31B1B.svg)][#arxiv-paper-package]
@@ -48,7 +49,13 @@ import lotus
 from lotus.models import OpenAIModel
 
 # configure the LM, and remember to export your API key
-lm = OpenAIModel()
+lm = OpenAIModel(
+    model='llama3.1',
+    api_key='H9hWk3vo.*************',
+    api_base='https://api.ollama.services.storemesh.com',
+    provider='dsm-ollama',
+    hf_name='FacebookAI/xlm-roberta-base',
+)
 lotus.settings.configure(lm=lm)
 
 # create dataframes with course names and skills
