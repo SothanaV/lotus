@@ -38,7 +38,7 @@ Below are just a few semantic operators provided by LOTUS. To learn more about s
 ```
 conda create -n lotus python=3.9 -y
 conda activate lotus
-pip install lotus-ai
+pip install git+https://github.com/SothanaV/lotus.git
 ```
 
 # Quickstart
