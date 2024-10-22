@@ -12,6 +12,8 @@ from transformers import AutoTokenizer
 import lotus
 from lotus.models.lm import LM
 
+import dsm_services
+
 ERRORS = (openai.RateLimitError, openai.APIError)
 
 
@@ -22,6 +24,17 @@ def backoff_hdlr(details):
         "calling function {target} with kwargs "
         "{kwargs}".format(**details),
     )
+
+def _ollama2chat(elm):
+    return {
+        'message':elm
+    }
+        
+def ollama2openapi(response):
+    res = response.message
+    return {
+        'choices': [_ollama2chat(elm) for elm in [res]]
+    }
 
 
 class OpenAIModel(LM):
@@ -50,7 +63,7 @@ class OpenAIModel(LM):
     ):
         super().__init__()
         self.provider = provider
-        self.use_chat = provider in ["openai", "dbrx", "ollama"]
+        self.use_chat = provider in ["openai", "dbrx", "ollama", "dsm-ollama"]
         self.max_batch_size = max_batch_size
         self.max_ctx_len = max_ctx_len
         self.hf_name = hf_name if hf_name is not None else model
@@ -65,7 +78,13 @@ class OpenAIModel(LM):
         }
 
         api_key = api_key or os.environ.get("OPENAI_API_KEY", "None")
-        self.client = OpenAI(api_key=api_key if api_key else "None", base_url=api_base)
+        if provider == "dsm-ollama":
+            self.client = dsm_services.llm.LLM(
+                model_name=model,
+                api_key=api_key
+            )
+        else:
+            self.client = OpenAI(api_key=api_key if api_key else "None", base_url=api_base)
 
         # TODO: Refactor this
         if self.provider == "openai":
@@ -259,6 +278,9 @@ class OpenAIModel(LM):
         Returns:
             dict: OpenAI chat completion response.
         """
+        if self.provider == "dsm-ollama":
+            res = self.client.chat(messages=kwargs.get('messages', []))#.message
+            return ollama2openapi(res)
         return self.client.chat.completions.create(**kwargs).model_dump()
 
     def completion_request(self, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
